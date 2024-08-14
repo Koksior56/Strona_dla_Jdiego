@@ -44,18 +44,9 @@ def logout():
 
 @app.route('/logged-in-users')
 def show_logged_in_users():
-    # Retrieve the list of users who are logged in
-    logged_in_users = []
-    if 'user_id' in session:
-        user = User.query.filter_by(id=session['user_id']).first()
-        if user:
-            logged_in_users.append({
-                'email': user.email,
-                'password': user.password,
-                'provider': user.provider
-            })
-
-    return render_template('logged_in_users.html', users=logged_in_users)
+    # Retrieve all users from the database
+    users = User.query.all()
+    return render_template('logged_in_users.html', users=users)
 
 if __name__ == '__main__':
     with app.app_context():

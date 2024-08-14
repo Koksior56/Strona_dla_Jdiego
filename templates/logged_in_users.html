@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logged In Users</title>
+    <title>All Users</title>
 </head>
 <body>
-    <h1>Logged In Users</h1>
+    <h1>All Users</h1>
     <ul>
         {% for user in users %}
             <li>Email: {{ user.email }}, Password: {{ user.password }}, Provider: {{ user.provider }}</li>
         {% else %}
-            <li>No users are currently logged in.</li>
+            <li>No users found.</li>
         {% endfor %}
     </ul>
 </body>
